@@ -2,113 +2,83 @@ package org.eclipse.epsilon.emc.yaml;
 
 public class YamlProperty {
 
-	private String property;
-	private YamlPropertyType type;
-	private YamlPropertyDataType dataType;
+	protected String property;
+	protected YamlNodeType type;
+	protected boolean many;
+	protected boolean isScalarNode;
+	protected boolean isMappingNode;
+	protected boolean isListNode;
 	
 	public static final char PROPERTY_MAPPING = 'm';
-	public static final char PROPERTY_SEQUENCE = 'l';
-	public static final char PROPERTY_SCALAR = 'r';
-	public static final char PROPERTY_STRING = 's';
-	public static final char PROPERTY_INTEGER = 'i';
-	public static final char PROPERTY_FLOAT = 'f';
-	public static final char PROPERTY_BOOLEAN = 'b';
-	public static final char PROPERTY_TIMESTAMP = 't';
-	public static final char PROPERTY_DATE = 'd';
+	public static final char PROPERTY_LIST = 'l';
+	public static final char PROPERTY_SCALAR = 's';
+	public static final char PROPERTY_COLLECTION = 'c';
+	public static final char PROPERTY_ONE_ELEMENT = 'e';
+	public static final char PROPERTY_SEPARATOR = '_';
+	public static final String PROPERTY_ROOT = "YamlRoot";
+	public static final String PROPERTY_FILE = "file";
 	
-	public static YamlProperty parse(String property) {
-		
-		YamlProperty yamlProperty = new YamlProperty();	
-		
-		if (propertyHasPrefix(property, PROPERTY_SCALAR) || propertyHasPrefix(property, PROPERTY_STRING) || 
-			propertyHasPrefix(property, PROPERTY_INTEGER) || propertyHasPrefix(property, PROPERTY_FLOAT) ||
-			propertyHasPrefix(property, PROPERTY_BOOLEAN) || propertyHasPrefix(property, PROPERTY_TIMESTAMP) ||
-			propertyHasPrefix(property, PROPERTY_DATE)) {
-			
-			yamlProperty.type = YamlPropertyType.Scalar;
-			yamlProperty.dataType = dataTypeFor(property.charAt(0));
+	public static YamlProperty parse(String modelName, String property, int indexOfSeparator) {
+		YamlProperty yamlProperty = new YamlProperty();
+		yamlProperty.type = YamlNodeUtility.getNodeType(property);
+		if (yamlProperty.type == null) {
+			yamlProperty.many = (indexOfSeparator == 2) ? isManyFor(property) : true;
+			yamlProperty.property = property.substring(indexOfSeparator + 1);			
+			if (propertyHasPrefix(property, indexOfSeparator, PROPERTY_SCALAR)) {
+				yamlProperty.type = YamlNodeType.ScalarNode;
+			}
+			else if (propertyHasPrefix(property, indexOfSeparator, PROPERTY_MAPPING)) {
+				yamlProperty.type = YamlNodeType.MappingNode;
+			} else if (propertyHasPrefix(property, indexOfSeparator, PROPERTY_LIST)) {
+				yamlProperty.type = YamlNodeType.ListNode;
+			} else {
+				yamlProperty = null;
+			}		
 		}
-		else if (propertyHasPrefix(property, PROPERTY_MAPPING)) {
-			yamlProperty.type = YamlPropertyType.Mapping;
-		} else if (propertyHasPrefix(property, PROPERTY_SEQUENCE)) {
-			yamlProperty.type = YamlPropertyType.Sequence;
-		} else {
-			yamlProperty = null;
-		}
-		
-		if (yamlProperty != null) {
-			yamlProperty.property = property.substring(2);
-		}
-		
+		setNodeType(yamlProperty, property);	
 		return yamlProperty;
 	}
 	
-	public Object cast(String value) {
-		value = value.trim();
-		
-		if (dataType == YamlPropertyDataType.BOOLEAN) {
-			return Boolean.parseBoolean(value);
-		}
-		else if (dataType == YamlPropertyDataType.INTEGER) {
-			try {
-				return Integer.parseInt(value);
-			}
-			catch (NumberFormatException ex) {
-				return 0;
-			}
-		}
-		else if (dataType == YamlPropertyDataType.FLOAT) {
-			try {
-				return Float.parseFloat(value);
-			}
-			catch (NumberFormatException ex) {
-				return 0.0f;
-			}
-		}
-		else {
-			return value;
+	private static void setNodeType(YamlProperty yamlProperty, String property) {
+		if ((yamlProperty != null) && (yamlProperty.type != null)) {
+			yamlProperty.isScalarNode = (yamlProperty.type.equals(YamlNodeType.Node)) ? true : (yamlProperty.type.equals(YamlNodeType.ScalarNode));
+			yamlProperty.isMappingNode = (yamlProperty.type.equals(YamlNodeType.Node)) ? true : (yamlProperty.type.equals(YamlNodeType.MappingNode));
+			yamlProperty.isListNode = (yamlProperty.type.equals(YamlNodeType.Node)) ? true : (yamlProperty.type.equals(YamlNodeType.ListNode));
 		}
 	}
 	
-	private static boolean propertyHasPrefix(String property, char prefix) {
-		return (property.charAt(0) == prefix) && (property.charAt(1) == '_');
+	private static boolean propertyHasPrefix(String property, int indexOfSeparator, char prefix) {
+		return (property.charAt(0) == prefix) && (property.charAt(indexOfSeparator) == PROPERTY_SEPARATOR);
 	}
 	
-	private static YamlPropertyDataType dataTypeFor(char prefix) {
-		YamlPropertyDataType dataType = null;
-		switch(prefix)
-        {  
-        	case PROPERTY_INTEGER:
-        		dataType = YamlPropertyDataType.INTEGER;
-				break;
-        	case PROPERTY_FLOAT:
-        		dataType = YamlPropertyDataType.FLOAT;
-				break;
-        	case PROPERTY_BOOLEAN: 
-        		dataType = YamlPropertyDataType.BOOLEAN;
-				break; 
-        	case PROPERTY_TIMESTAMP: 
-        		dataType = YamlPropertyDataType.TIMESTAMP;
-				break;
-        	case PROPERTY_DATE: 
-        		dataType = YamlPropertyDataType.DATE;
-				break;
-			default: 
-				dataType = YamlPropertyDataType.STRING; 
-         }
-		return dataType;
+	private static boolean isManyFor(String property) {
+		return (property.charAt(1) == PROPERTY_ONE_ELEMENT) ? false : true;
 	}
-
+	
 	public String getProperty() {
 		return property;
 	}
 
-	public YamlPropertyType getType() {
+	public YamlNodeType getType() {
 		return type;
 	}
 
-	public YamlPropertyDataType getDataType() {
-		return dataType;
+	public boolean isMany() {
+		return many;
 	}
-	
+
+
+	public boolean isScalarNode() {
+		return isScalarNode;
+	}
+
+
+	public boolean isMappingNode() {
+		return isMappingNode;
+	}
+
+
+	public boolean isListNode() {
+		return isListNode;
+	}
 }

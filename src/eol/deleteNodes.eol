@@ -1,0 +1,5 @@
+delete m_firstName.all.at(0);
+
+
+var firewall = l_firewall.all.at(0).value.at(1).se_number;
+delete firewall;

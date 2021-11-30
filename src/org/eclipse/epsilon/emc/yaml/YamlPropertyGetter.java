@@ -1,11 +1,11 @@
 package org.eclipse.epsilon.emc.yaml;
 
-import java.util.ArrayList;
-import java.util.Map;
-import org.eclipse.epsilon.eol.exceptions.EolIllegalPropertyException;
+import java.util.Collection;
+import java.util.Map.Entry;
 import org.eclipse.epsilon.eol.exceptions.EolRuntimeException;
 import org.eclipse.epsilon.eol.execute.context.IEolContext;
 import org.eclipse.epsilon.eol.execute.introspection.java.JavaPropertyGetter;
+import org.eclipse.epsilon.eol.types.EolModelElementType;
 
 public class YamlPropertyGetter extends JavaPropertyGetter {
 
@@ -15,32 +15,28 @@ public class YamlPropertyGetter extends JavaPropertyGetter {
 		this.model = model;
 	}
 	
-	@SuppressWarnings("rawtypes")
 	@Override
 	public Object invoke(Object object, String property, IEolContext context) throws EolRuntimeException {
-				
-		if("value".equals(property)) {
-			if (object instanceof Map.Entry) {
-				return ((Map.Entry) object).getValue();
-			}
-			else if (object instanceof ArrayList) {
-				return YamlNodeCollector.getValueOfNodes((ArrayList) object);
-			}
-			else {
-				throw new EolIllegalPropertyException(object, property, context);
-			}
+		if (object instanceof EolModelElementType) {
+			return super.invoke(object, property, context);
 		}
-		
-		if (object instanceof Map.Entry) {
-			return YamlNodeCollector.collectNodesOfType(((Map.Entry) object).getValue(), property, model.getName());
-		} 
-		else if (object instanceof ArrayList) {
-			return YamlNodeCollector.collectNodesOfType(object, property, model.getName());
-		}
-			
-		
-		return super.invoke(object, property, context);
-		
+		else {
+			Object yamlContent = object;
+			if (object instanceof Entry) {
+				yamlContent = ((Entry)object).getValue();		
+				if(property.endsWith("value")) {
+					return YamlTypeConverter.getValue(yamlContent, property);
+				} 
+				else if(property.equals("name")) {
+					return ((Entry)object).getKey();
+				}
+				else if(property.equals("type")) {
+					return YamlNodeUtility.getNodeType((Entry)object);
+				}
+			}
+			YamlProperty yamlProperty = YamlProperty.parse(this.model.getName(), property, 2);	
+			Collection<Entry> queryResult = YamlNodeUtility.getNodes(yamlContent, yamlProperty, false);			
+			return YamlNodeUtility.getQueryResult(queryResult, yamlProperty);		
+		}			
 	}
-	
 }

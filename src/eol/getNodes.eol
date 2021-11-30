@@ -1,0 +1,35 @@
+var firstName1 = M.getRoot().mc_firstName.at(0);
+var firstName2 = M.getRoot().me_firstName;
+firstName1.println();
+firstName2.println();
+
+
+var allNodes = Node.all;
+allNodes.println();
+
+
+for (currentNode in allNodes) {
+	currentNode.type.print();
+	" ".print();
+}
+
+
+var mappingNodes = MappingNode.all;
+mappingNodes.println();
+
+
+var allFirewalls = l_firewall.all;
+allFirewalls.println();
+
+
+var salaryBenefits = l_firewall.all.at(1).me_salary.se_benefits;
+salaryBenefits.println();
+
+
+var coordinate = m_coordinate.all;
+coordinate.name.println();
+coordinate.value.println();
+
+
+var location = M.getRoot().value.at(1).me_homeAddress.me_homeAddress.se_location;
+location.println();

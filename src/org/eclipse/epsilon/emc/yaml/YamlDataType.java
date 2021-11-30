@@ -1,12 +1,11 @@
 package org.eclipse.epsilon.emc.yaml;
 
-public enum YamlPropertyDataType {
-
+public enum YamlDataType {
+	
 	STRING,
+	BOOLEAN,
 	INTEGER,
 	FLOAT,
-	BOOLEAN,
-	TIMESTAMP,
-	DATE
+	DOUBLE
 	
 }

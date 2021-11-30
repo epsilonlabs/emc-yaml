@@ -1,0 +1,68 @@
+M.setRoot(2);
+
+var root = M.getRoot();
+root.value.addRows(2);
+
+var firstRow = root.value.at(0);
+var secondRow = root.value.at(1);
+
+var firstNameNode = new m_firstName;
+var scalarNode = new s_scalar(45.23);
+firstNameNode.value.appendNode(scalarNode);
+
+var dataNode = new m_data;
+var isEncryptedNode = new s_isEncrypted(true);
+dataNode.value.appendNode(isEncryptedNode);
+
+var firewallNode = new l_firewall(2);
+var typeNode1 = new s_type("informational");
+var typeNode2 = new s_type("warning");
+var numberNode = new s_number(4567868);
+firewallNode.value.at(0).appendNode(typeNode1);
+firewallNode.value.at(1).appendNode(typeNode2);
+firewallNode.value.at(1).appendNode(numberNode);
+
+var homeAddressNode1 = new m_homeAddress;
+var lineNode = new l_line(2);
+var ageNode1 = new s_age(44);
+var ageNode2 = new s_age(33);
+var lastNameNode1 = new s_lastName("David");
+var lastNameNode2 = new s_lastName("Emma");
+var lastNameNode = new s_lastName("Davidson");
+
+var homeAddressNode2 = new m_homeAddress;
+var locationNode = new s_location("Berlin");
+var lastNameNode3 = new s_lastName("Mihaly");
+var imageNode = new l_image(4);
+
+var zipNode = new s_zip(345.657);
+var testNode = new s_test("Stress test");
+
+var coordinate = new m_coordinate;
+var x_axisNode = new s_x_axis(33);
+var y_axisNode = new s_y_axis(10);
+coordinate.value.appendNode(x_axisNode);
+coordinate.value.appendNode(y_axisNode);
+
+imageNode.value = Sequence{1, 2, 3, 4};
+
+homeAddressNode2.value.appendNode(locationNode);
+homeAddressNode2.value.appendNode(lastNameNode3);
+homeAddressNode2.value.appendNode(imageNode);
+
+lineNode.value.at(0).appendNode(ageNode1);
+lineNode.value.at(0).appendNode(lastNameNode1);
+lineNode.value.at(1).appendNode(ageNode2);
+lineNode.value.at(1).appendNode(lastNameNode2);
+homeAddressNode1.value.appendNode(lineNode);
+homeAddressNode1.value.appendNode(lastNameNode);
+homeAddressNode1.value.appendNode(homeAddressNode2);
+homeAddressNode1.value.appendNode(zipNode);
+homeAddressNode1.value.appendNode(testNode);
+
+firstRow.appendNode(firstNameNode);
+firstRow.appendNode(dataNode);
+firstRow.appendNode(firewallNode);
+firstRow.appendNode(homeAddressNode1);
+
+secondRow.appendNode(coordinate);

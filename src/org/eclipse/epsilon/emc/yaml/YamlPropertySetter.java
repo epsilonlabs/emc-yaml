@@ -1,12 +1,11 @@
 package org.eclipse.epsilon.emc.yaml;
 
-import java.util.ArrayList;
-import java.util.Map;
+import java.util.List;
+import java.util.Map.Entry;
 import org.eclipse.epsilon.eol.exceptions.EolIllegalPropertyException;
 import org.eclipse.epsilon.eol.exceptions.EolRuntimeException;
 import org.eclipse.epsilon.eol.execute.context.IEolContext;
 import org.eclipse.epsilon.eol.execute.introspection.AbstractPropertySetter;
-import org.eclipse.epsilon.eol.types.EolSequence;
 
 public class YamlPropertySetter extends AbstractPropertySetter {
 
@@ -17,32 +16,26 @@ public class YamlPropertySetter extends AbstractPropertySetter {
 	}
 	
 	@Override
-	public void invoke(Object object, String property, Object value, IEolContext context) throws EolRuntimeException {
-		
+	public void invoke(Object object, String property, Object value, IEolContext context) throws EolRuntimeException {	
 		if("value".equals(property)) {
-			if (object instanceof Map.Entry) {
-				((Map.Entry) object).setValue(value);
+			if (object instanceof Entry) {
+				if(value instanceof Entry) {
+					((Entry) object).setValue(((Entry)value).getValue());
+				}
+				else {
+					((Entry) object).setValue(value);
+				}
 			}
-			else if(object instanceof ArrayList) {	
-				for(Map.Entry entry: (ArrayList<Map.Entry>) object) {
+			else if(object instanceof List) {	
+				for(Entry entry: (List<Entry>) object) {
 					entry.setValue(value);			
 				}
-			}
-			else if(object instanceof EolSequence) {
-				for(Object item: (EolSequence)object) {
-					for(Map.Entry entry: (ArrayList<Map.Entry>) item) {
-						entry.setValue(value);			
-					}
-				}
-			}
+			}	
 			else {
 				throw new EolIllegalPropertyException(object, property, context);
 			}
-			model.store();
 			return;
-		}
-		
+		}	
 		super.invoke(object, property, context);
 	}
-	
 }

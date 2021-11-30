@@ -1,0 +1,37 @@
+- firstName: {scalar: 45.23}
+  data: {isEncrypted: true}
+  firewall:
+  - {type: informational}
+  - {type: warning, number: 4567868}
+  homeAddress:
+    line:
+    - {age: 44, lastName: David}
+    - {age: 33, lastName: Emma}
+    lastName: Davidson
+    homeAddress:
+      location: Berlin
+      lastName: Mihaly
+      image: [1, 2, 3, 4]
+    zip: 345.657
+    test: Stress test
+- coordinate: {x_axis: 33, y_axis: 10}
+  lastName: Melzer
+  age: 70
+  firewall:
+  - type: '444'
+    info: {family: true, age: 100}
+    salary: {taxes: 30%, benefits: false}
+    food:
+      image: [apple, orange]
+    information: [alpha, beta, gamma]
+  - {type: average, number: 456786868}
+  - information: Street Roamings
+    dataTypes: [numerics, strings, booleans]
+  homeAddress:
+    line:
+    - {age: 64, street: Alea Targul}
+    - {age: 11, street: Broadway}
+    lastName: City Y
+    homeAddress: {location: Hawaii, lastName: xx}
+    zip: 345657
+    test: ''

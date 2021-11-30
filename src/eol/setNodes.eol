@@ -1,0 +1,12 @@
+m_firstName.all.at(0).value = "New Value";
+
+//m_firstName.all.at(0).se_scalar.value = new MappingNode();
+
+
+var firewall = l_firewall.all.at(0);
+firewall.value = new ScalarNode("scalarNode", 5);
+
+
+m_data.all.at(0).value = new ListNode("listNode", 5);
+//m_data.all.at(0).value = new l_offerings(5);
+//m_data.all.at(0).value = new s_primitiveValue("A simple string");
