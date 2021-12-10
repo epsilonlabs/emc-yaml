@@ -10,9 +10,11 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Map.Entry;
 import java.util.Set;
 import java.util.List;
+import org.yaml.snakeyaml.DumperOptions;
 import org.yaml.snakeyaml.Yaml;
 
 public class YamlNodeUtility {
@@ -106,7 +108,7 @@ public class YamlNodeUtility {
 		try {
 			nodeType = YamlNodeType.valueOf(type);
 		}
-		catch(Exception e) {
+		catch(Exception ex) {
 			nodeType = null;
 		}
 		return nodeType;
@@ -142,8 +144,8 @@ public class YamlNodeUtility {
 		return map.entrySet().iterator().next();	
 	}
 	
-	public static Entry getNode(String type, String modelName, int indexOfSeparator, Collection<Object> parameters) {
-		YamlProperty yamlProperty = YamlProperty.parse(modelName, type, indexOfSeparator);
+	public static Entry getNode(String type, int indexOfSeparator, Collection<Object> parameters) {
+		YamlProperty yamlProperty = YamlProperty.parse(type, indexOfSeparator);
 		return YamlNodeUtility.getNode(yamlProperty, parameters);		
 	}
 	
@@ -195,26 +197,100 @@ public class YamlNodeUtility {
 		return nodeValue;
 	}
 	
-	private static YamlNodeParent getParentNode(Object yamlContent, Entry childNode) {
-		YamlNodeParent parentNode = new YamlNodeParent();
-		setParentNode(yamlContent, childNode, parentNode);
-		return parentNode;
+	public static boolean deleteNode(Object yamlContent, List<Entry> createdNodes, Entry instance) {
+		boolean isCreatedNode = createdNodes.contains(instance);
+		if (isCreatedNode) {
+			createdNodes.remove(instance);
+			return true;
+		}
+		else {
+			YamlObject yamlObject = new YamlObject(instance);
+			findYamlObject(yamlContent, yamlObject);
+			if(yamlObject.isFound()) {
+				yamlObject.getParentNode().remove(instance.getKey());
+				return true;
+			}
+			else {
+				return false;
+			}
+		}
 	}
 	
-	private static void setParentNode(Object yamlContent, Entry childNode, YamlNodeParent parentNode) {
-		if (yamlContent instanceof List) {
-			setParentNode((List)yamlContent, childNode, parentNode);
+	public static boolean ownsYamlObject(Object yamlContent, List<Entry> createdNodes, Object instance) {
+		boolean isOwnYamlObject = ownsYamlObject(yamlContent, instance);
+		boolean isCreated = (!isOwnYamlObject) ? isCreatedYamlObject(createdNodes, new YamlObject(instance)) : false;
+		return isOwnYamlObject || isCreated;
+	}
+	
+	private static boolean ownsYamlObject(Object yamlContent, Object instance) {
+		if (instance instanceof List) {
+			 return ownsYamlObjects(yamlContent, (List)instance);
 		}
-		else if (yamlContent instanceof Map) {
-			setParentNode((Map)yamlContent, childNode, parentNode);
+		else {
+			YamlObject yamlObject = null;
+			if (instance instanceof YamlModel) {
+				yamlObject = new YamlObject(((YamlModel)instance).getYamlContent());
+			}
+			else if (instance instanceof Entry) {
+				Entry entry = (Entry) instance;
+				yamlObject = (YamlProperty.PROPERTY_ROOT.equals(entry.getKey())) ? new YamlObject(entry.getValue()) : new YamlObject(instance);
+			}
+			else {
+				yamlObject = new YamlObject(instance);
+			}
+			return ownsYamlObject(yamlContent, yamlObject);
 		}
 	}
 	
-	private static void setParentNode(List listNode, Entry childNode, YamlNodeParent parentNode) {
+	private static boolean ownsYamlObjects(Object yamlContent, List yamlObjects) {
+		for (Object yamlObject : yamlObjects) {
+			boolean isOwnYamlObject = (yamlObject instanceof List) ? ownsYamlObjects(yamlContent, (List)yamlObject) : ownsYamlObject(yamlContent, new YamlObject(yamlObject));
+			if (!isOwnYamlObject) {
+				return false;
+			}
+		}
+		return true;
+	}
+	
+	private static boolean ownsYamlObject(Object yamlContent, YamlObject yamlObject) {
+		findYamlObject(yamlContent, yamlObject);
+		return yamlObject.isFound();
+	}
+	
+	private static void findYamlObject(Object yamlContent, YamlObject yamlObject) {
+		if (Objects.equals(yamlContent, yamlObject.getValue())) {
+			yamlObject.setIsFound(true);
+		}
+		else {
+			if (yamlContent instanceof List) {
+				findYamlObject((List)yamlContent, yamlObject);
+			}
+			else if (yamlContent instanceof Map) {
+				findYamlObject((Map)yamlContent, yamlObject);
+			}
+		}
+	}
+	
+	private static void findYamlObject(List listNode, YamlObject yamlObject) {
 		for (Object node: listNode) {
-			if (!parentNode.hasParent()) {
-				if (node instanceof Map) {
-					setParentNode((Map) node, childNode, parentNode);
+			if (!yamlObject.isFound()) {
+				findYamlObject(node, yamlObject);	
+			}
+			else {
+				break;
+			}
+		}
+	}
+	
+	private static void findYamlObject(Map mappingNode, YamlObject yamlObject) {
+		Set<Entry> entries = (Set<Entry>) mappingNode.entrySet();	
+		for (Entry entry: entries) {
+			if (!yamlObject.isFound()) {
+				if (entry.equals(yamlObject.getValue())) {
+					yamlObject.setParentNode(mappingNode);
+				}
+				else {
+					findYamlObject(entry.getValue(), yamlObject);
 				}
 			}
 			else {
@@ -223,54 +299,19 @@ public class YamlNodeUtility {
 		}
 	}
 	
-	private static void setParentNode(Map mappingNode, Entry childNode, YamlNodeParent parentNode) {	
-		Set<Entry> entries = (Set<Entry>) mappingNode.entrySet();	
-		for (Entry entry: entries) {
-			if (entry.equals(childNode)) {
-				parentNode.setParentNode(mappingNode);
-				parentNode.setHasParent(true);
-				break;
-			}
-			setParentNode(entry, childNode, parentNode);	
-		}			
-	}
-	
-	private static void setParentNode(Entry entry, Entry childNode, YamlNodeParent parentNode) {
-		Object entryValue = entry.getValue();
-		if (entryValue instanceof List) {	
-			setParentNode((List) entryValue, childNode, parentNode);
-		}
-		else if (entryValue instanceof Map) {
-			setParentNode((Map) entryValue, childNode, parentNode);
-		}
-	}
-	
-	public static boolean deleteNode(Object yamlContent, Object instance) {
-		if (instance instanceof Entry) {
-			Entry node = (Entry)instance;
-			YamlNodeParent parentNode = YamlNodeUtility.getParentNode(yamlContent, node);
-			if(parentNode.hasParent()) {
-				parentNode.getParentNode().remove(node.getKey());
+	private static boolean isCreatedYamlObject(List<Entry> createdNodes, YamlObject yamlObject) {
+		for (Entry createdNode : createdNodes) {
+			if (createdNode.equals(yamlObject.getValue())) {
 				return true;
 			}
 			else {
-				return false;
+				boolean isCreatedYamlObject = ownsYamlObject(createdNode.getValue(), yamlObject);	
+				if (isCreatedYamlObject) {
+					return true;
+				}
 			}
 		}
-		else {
-			return false;
-		}
-	}
-	
-	public static boolean ownsNode(Object yamlContent, Object instance) {
-		if (instance instanceof Entry) {
-			Entry node = (Entry)instance;
-			YamlNodeParent parentNode = YamlNodeUtility.getParentNode(yamlContent, node);
-			return parentNode.hasParent();
-		}
-		else {			
-			return (instance instanceof YamlModel) || (yamlContent.equals(instance));	
-		}	
+		return false;
 	}
 	
 	public static String getPrefixOfType(YamlNodeType yamlNodeType) {
@@ -306,13 +347,15 @@ public class YamlNodeUtility {
         	yamlContent = yaml.load(inputStream);
     	}
     	return yamlContent;
-    	//return (yamlContent != null) ? yamlContent : new LinkedHashMap<String, Object>();
 	}
 	
 	public static void storeYamlContent(File file, Object yamlContent) throws IOException {
-		Yaml yaml = new Yaml();
-		try(FileWriter writer = new FileWriter(file)) {
-			yaml.dump(yamlContent, writer);
+		try(FileWriter writer = new FileWriter(file)) {			
+			DumperOptions dumperOptions = new DumperOptions();
+			dumperOptions.setPrettyFlow(true);
+			dumperOptions.setDefaultFlowStyle(DumperOptions.FlowStyle.BLOCK);
+			Yaml yaml = new Yaml(dumperOptions);
+			yaml.dump(yamlContent, writer);			 
 		}
 	}
 	

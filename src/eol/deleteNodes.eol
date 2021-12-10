@@ -1,5 +1,6 @@
-delete m_firstName.all.at(0);
+m_homeAddress.all.at(0).le_line.value.removeAt(0); // delete a row from a ListNode
 
+delete m_firstName.all.at(0);
 
 var firewall = l_firewall.all.at(0).value.at(1).se_number;
 delete firewall;

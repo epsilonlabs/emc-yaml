@@ -18,7 +18,7 @@ public class YamlProperty {
 	public static final String PROPERTY_ROOT = "YamlRoot";
 	public static final String PROPERTY_FILE = "file";
 	
-	public static YamlProperty parse(String modelName, String property, int indexOfSeparator) {
+	public static YamlProperty parse(String property, int indexOfSeparator) {
 		YamlProperty yamlProperty = new YamlProperty();
 		yamlProperty.type = YamlNodeUtility.getNodeType(property);
 		if (yamlProperty.type == null) {
@@ -67,16 +67,13 @@ public class YamlProperty {
 		return many;
 	}
 
-
 	public boolean isScalarNode() {
 		return isScalarNode;
 	}
 
-
 	public boolean isMappingNode() {
 		return isMappingNode;
 	}
-
 
 	public boolean isListNode() {
 		return isListNode;

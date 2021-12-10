@@ -1,4 +1,4 @@
-M.setRoot(2);
+M.setRootAsList();
 
 var root = M.getRoot();
 root.value.addRows(2);

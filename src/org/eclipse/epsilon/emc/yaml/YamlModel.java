@@ -5,6 +5,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map.Entry;
 import org.eclipse.epsilon.common.util.StringProperties;
 import org.eclipse.epsilon.common.util.StringUtil;
@@ -22,18 +23,36 @@ public class YamlModel extends CachedModel<Entry> implements IOperationContribut
 	protected File file;
 	protected Object yamlContent;
 	protected YamlModelOperationContributor yamlModelOperationContributor;
+	protected List<Entry> createdNodes = new ArrayList<>();
 	
 	public YamlModel() {
 		propertyGetter = new YamlPropertyGetter(this);
 		propertySetter = new YamlPropertySetter(this);
 	}
 	
-	public Object getRoot() {
+	public synchronized void clear() {
+		this.yamlContent = null;
+		this.createdNodes.clear();
+	}
+	
+	public synchronized Object getYamlContent() {
+		return this.yamlContent;
+	}
+	
+	public synchronized void setYamlContent(Object yamlContent) {
+		this.yamlContent = yamlContent;
+	}
+	
+	public synchronized Object getRoot() {
 		return YamlNodeUtility.getRootNode(this.yamlContent);
 	}
 	
-	public void setRoot(int rootType) {
-		this.yamlContent = (rootType == 1) ? new LinkedHashMap<String, Object>() : new ArrayList<>();
+	public synchronized void setRootAsList() {
+		this.yamlContent = new ArrayList<>();
+	}
+	
+	public synchronized void setRootAsMap() {
+		this.yamlContent = new LinkedHashMap<String, Object>();
 	}
 	
 	public File getFile() {
@@ -79,9 +98,7 @@ public class YamlModel extends CachedModel<Entry> implements IOperationContribut
 
 	@Override
 	public boolean owns(Object instance) {
-		return true;
-		//TO DO: Implement YamlNodeUtility.ownsNode
-		//return YamlNodeUtility.ownsNode(this.yamlContent, instance);
+		return YamlNodeUtility.ownsYamlObject(this.yamlContent, createdNodes, instance);
 	}
 
 	@Override
@@ -91,7 +108,7 @@ public class YamlModel extends CachedModel<Entry> implements IOperationContribut
 
 	@Override
 	public boolean hasType(String type) {
-		return (YamlProperty.parse(this.getName(), type, 1) != null);
+		return (YamlProperty.parse(type, 1) != null);
 	}
 	
 	@Override
@@ -100,12 +117,13 @@ public class YamlModel extends CachedModel<Entry> implements IOperationContribut
 	}
 
 	@Override
-	public boolean store(String location) {
+	public synchronized boolean store(String location) {
 		try {
 			YamlNodeUtility.storeYamlContent(this.file, this.yamlContent);
 		    return true;
 		}
-		catch (Exception e) {
+		catch (Exception ex) {
+			ex.printStackTrace();
 			return false;
 		}
 	}
@@ -119,14 +137,14 @@ public class YamlModel extends CachedModel<Entry> implements IOperationContribut
 	}
 
 	@Override
-	protected Collection<Entry> allContentsFromModel() {
-		YamlProperty yamlProperty = YamlProperty.parse(this.getName(), YamlNodeType.Node.toString(), 0);
+	protected synchronized Collection<Entry> allContentsFromModel() {
+		YamlProperty yamlProperty = YamlProperty.parse(YamlNodeType.Node.toString(), 0);
 		return YamlNodeUtility.getNodes(this.yamlContent, yamlProperty, true);
 	}
 
 	@Override
-	protected Collection<Entry> getAllOfTypeFromModel(String type) throws EolModelElementTypeNotFoundException {
-		YamlProperty yamlProperty = YamlProperty.parse(this.getName(), type, 1);		
+	protected synchronized Collection<Entry> getAllOfTypeFromModel(String type) throws EolModelElementTypeNotFoundException {
+		YamlProperty yamlProperty = YamlProperty.parse(type, 1);		
 		return YamlNodeUtility.getNodes(this.yamlContent, yamlProperty, true);
 	}	
 
@@ -141,18 +159,24 @@ public class YamlModel extends CachedModel<Entry> implements IOperationContribut
 	}	
 
 	@Override
-	public Entry createInstance(String type, Collection<Object> parameters) throws EolModelElementTypeNotFoundException {
-		return YamlNodeUtility.getNode(type, this.getName(), 1, parameters);		
+	public synchronized Entry createInstance(String type, Collection<Object> parameters) throws EolModelElementTypeNotFoundException {
+		Entry newNode = YamlNodeUtility.getNode(type, 1, parameters);
+		createdNodes.add(newNode);
+		return newNode;		
 	}
 	
 	@Override
 	protected void disposeModel() {
-		this.yamlContent = null;
+		clear();
 	}
 
 	@Override
-	protected boolean deleteElementInModel(Object instance) throws EolRuntimeException {
-		return YamlNodeUtility.deleteNode(this.yamlContent, instance);
+	protected synchronized boolean deleteElementInModel(Object instance) throws EolRuntimeException {
+		if (!(instance instanceof Entry)) {
+			return false;
+		}
+		Entry node = (Entry) instance;
+		return YamlNodeUtility.deleteNode(this.yamlContent, this.createdNodes, node);
 	}
 
 	@Override
@@ -169,7 +193,8 @@ public class YamlModel extends CachedModel<Entry> implements IOperationContribut
 	protected synchronized void loadModel() throws EolModelLoadingException {
 		try {
 			this.yamlContent = YamlNodeUtility.getYamlContent(this.file);
-	    	this.yamlModelOperationContributor = new YamlModelOperationContributor(this);    		    		    	
+	    	this.yamlModelOperationContributor = new YamlModelOperationContributor(this);
+	    	this.createdNodes = new ArrayList<>();
 		}
 		catch (Exception ex) {
 			throw new EolModelLoadingException(ex, this);

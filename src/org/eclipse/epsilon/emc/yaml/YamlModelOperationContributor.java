@@ -22,7 +22,7 @@ public class YamlModelOperationContributor extends OperationContributor {
 
 	public void appendNode(Object item) throws EolRuntimeException {
 		Object target = getTarget();
-		if(target instanceof Map){
+		if(target instanceof Map) {
 			Entry entry = (Entry) item;
 			((Map) target).put(entry.getKey(), entry.getValue());
 		}
@@ -51,5 +51,15 @@ public class YamlModelOperationContributor extends OperationContributor {
 		else {
 			throw new EolRuntimeException("The object to which you add a row must be a ListNode. A ListNode is represented as a list of maps.");
 		}
+	}
+	
+	public void set(int index, Object object) throws EolRuntimeException {
+		Object target = getTarget();
+		if(target instanceof List) {
+			((List) target).set(index, object);
+		}
+		else {
+			throw new EolRuntimeException("The object to which you set a value must be a List.");
+		}		
 	}
 }

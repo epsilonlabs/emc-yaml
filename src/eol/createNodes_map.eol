@@ -1,0 +1,60 @@
+M.setRootAsMap();
+
+var root = M.root.value;
+
+var firstNameNode = new m_firstName;
+var scalarNode = new s_scalar(45.23);
+firstNameNode.value.appendNode(scalarNode);
+
+var dataNode = new m_data;
+var isEncryptedNode = new s_isEncrypted(true);
+dataNode.value.appendNode(isEncryptedNode);
+
+var firewallNode = new l_firewall(2);
+var typeNode1 = new s_type("informational");
+var typeNode2 = new s_type("warning");
+var numberNode = new s_number(4567868);
+firewallNode.value.at(0).appendNode(typeNode1);
+firewallNode.value.at(1).appendNode(typeNode2);
+firewallNode.value.at(1).appendNode(numberNode);
+
+var homeAddressNode1 = new m_homeAddress;
+var lineNode = new l_line(2);
+var ageNode1 = new s_age(44);
+var ageNode2 = new s_age(33);
+var lastNameNode1 = new s_lastName("David");
+var lastNameNode2 = new s_lastName("Emma");
+var lastNameNode = new s_lastName("Davidson");
+
+var homeAddressNode2 = new m_homeAddress;
+var locationNode = new s_location("Berlin");
+var lastNameNode3 = new s_lastName("Mihaly");
+var imageNode = new l_image(4);
+
+var zipNode = new s_zip(345.657);
+var testNode = new s_test("Stress test");
+
+imageNode.value.set(0, 1);
+imageNode.value.set(1, 22);
+imageNode.value.set(2, 333);
+imageNode.value.set(3, 4444);
+// imageNode.value = Sequence{1, 22, 333, 4444}; //alternative for the lines above
+
+homeAddressNode2.value.appendNode(locationNode);
+homeAddressNode2.value.appendNode(lastNameNode3);
+homeAddressNode2.value.appendNode(imageNode);
+
+lineNode.value.at(0).appendNode(ageNode1);
+lineNode.value.at(0).appendNode(lastNameNode1);
+lineNode.value.at(1).appendNode(ageNode2);
+lineNode.value.at(1).appendNode(lastNameNode2);
+homeAddressNode1.value.appendNode(lineNode);
+homeAddressNode1.value.appendNode(lastNameNode);
+homeAddressNode1.value.appendNode(homeAddressNode2);
+homeAddressNode1.value.appendNode(zipNode);
+homeAddressNode1.value.appendNode(testNode);
+
+root.appendNode(firstNameNode);
+root.appendNode(dataNode);
+root.appendNode(firewallNode);
+root.appendNode(homeAddressNode1);

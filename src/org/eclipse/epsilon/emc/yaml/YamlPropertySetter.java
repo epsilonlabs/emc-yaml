@@ -17,25 +17,35 @@ public class YamlPropertySetter extends AbstractPropertySetter {
 	
 	@Override
 	public void invoke(Object object, String property, Object value, IEolContext context) throws EolRuntimeException {	
-		if("value".equals(property)) {
-			if (object instanceof Entry) {
-				if(value instanceof Entry) {
-					((Entry) object).setValue(((Entry)value).getValue());
+		synchronized (this.model) {
+			if("value".equals(property)) {
+				if (object instanceof Entry) {
+					setValue((Entry)object, value);
 				}
+				else if(object instanceof List) {	
+					setValue((List)object, value);
+				}	
 				else {
-					((Entry) object).setValue(value);
+					throw new EolIllegalPropertyException(object, property, context);
 				}
 			}
-			else if(object instanceof List) {	
-				for(Entry entry: (List<Entry>) object) {
-					entry.setValue(value);			
-				}
-			}	
 			else {
-				throw new EolIllegalPropertyException(object, property, context);
+				super.invoke(object, property, context);
 			}
-			return;
-		}	
-		super.invoke(object, property, context);
+		}
+	}
+	
+	private void setValue(Entry node, Object value) {
+		Object newValue = (value instanceof Entry) ? ((Entry)value).getValue() : value;
+		if(YamlProperty.PROPERTY_ROOT.equals(node.getKey())) {
+			this.model.setYamlContent(newValue);
+		}
+		node.setValue(newValue);
+	}
+	
+	private void setValue(List listNode, Object value) {
+		for(Entry node: (List<Entry>) listNode) {
+			setValue(node, value);
+		}
 	}
 }
