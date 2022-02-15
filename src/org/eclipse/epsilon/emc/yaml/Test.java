@@ -8,21 +8,20 @@ import org.eclipse.epsilon.emc.emf.EmfModel;
 
 public class Test {
 
-	public static void main(String[] args) throws Exception {	    	
+	public static void main(String[] args) throws Exception {    	
 		//yamlModelConfiguration();	
 		emf2yamlTransformation();
 	}
 	
 	public static void yamlModelConfiguration() throws Exception {
-		EolModule module = new EolModule();
-		module.parse(new File("C:\\Workspaces\\emc-yaml\\src\\eol\\test.eol"));
-		
 		YamlModel model = new YamlModel();
 		model.setName("M");
 		model.setFile(new File("C:\\Workspaces\\emc-yaml\\src\\yaml\\sample.yaml"));
 		model.load();
 		model.setStoredOnDisposal(true);
 		
+		EolModule module = new EolModule();
+		module.parse(new File("C:\\Workspaces\\emc-yaml\\src\\eol\\test.eol"));
 		module.getContext().getModelRepository().addModel(model);
 		module.getContext().setModule(module);
 		module.execute();
@@ -30,9 +29,6 @@ public class Test {
    	}
 	
 	public static void emf2yamlTransformation() throws Exception {
-		EtlModule module = new EtlModule();
-		module.parse(new File("C:\\Workspaces\\emc-yaml\\src\\etl\\emf2yaml.etl"));
-		
 		EmfModel sourceModel = new EmfModel();
 		sourceModel.setName("Emf");
 		sourceModel.setModelFileUri(URI.createFileURI("C:\\Workspaces\\emc-yaml\\src\\emf\\cloudmanager_connector.ontap"));
@@ -47,9 +43,10 @@ public class Test {
 		targetModel.setStoredOnDisposal(true);
 		targetModel.load();
 		
+		EtlModule module = new EtlModule();
+		module.parse(new File("C:\\Workspaces\\emc-yaml\\src\\etl\\emf2yaml.etl"));
 		module.getContext().getModelRepository().addModel(sourceModel);
 		module.getContext().getModelRepository().addModel(targetModel);
-		
 		module.getContext().setModule(module);
 		module.execute();
     	module.getContext().getModelRepository().dispose();

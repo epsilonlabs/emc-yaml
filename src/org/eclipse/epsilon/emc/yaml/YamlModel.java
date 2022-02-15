@@ -43,6 +43,10 @@ public class YamlModel extends CachedModel<Entry> implements IOperationContribut
 		this.yamlContent = yamlContent;
 	}
 	
+	public synchronized void setYamlContent(String yamlContent) {
+		this.yamlContent = YamlNodeUtility.getYamlContent(yamlContent);
+	}
+	
 	public synchronized Object getRoot() {
 		return YamlNodeUtility.getRootNode(this.yamlContent);
 	}
@@ -192,7 +196,11 @@ public class YamlModel extends CachedModel<Entry> implements IOperationContribut
 	@Override
 	protected synchronized void loadModel() throws EolModelLoadingException {
 		try {
-			this.yamlContent = YamlNodeUtility.getYamlContent(this.file);
+			if (readOnLoad) {
+				if (this.file != null) {
+					this.yamlContent = YamlNodeUtility.getYamlContent(this.file);
+				}
+			}
 	    	this.yamlModelOperationContributor = new YamlModelOperationContributor(this);
 	    	this.createdNodes = new ArrayList<>();
 		}

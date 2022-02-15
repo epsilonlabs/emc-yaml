@@ -349,6 +349,11 @@ public class YamlNodeUtility {
     	return yamlContent;
 	}
 	
+	public static Object getYamlContent(String yamlContent) {	
+		Yaml yaml = new Yaml();
+    	return yaml.load(yamlContent);
+	}
+	
 	public static void storeYamlContent(File file, Object yamlContent) throws IOException {
 		try(FileWriter writer = new FileWriter(file)) {			
 			DumperOptions dumperOptions = new DumperOptions();
